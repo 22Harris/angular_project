@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HousingService } from '../housing.service';
 import { HousingLocation } from '../housinglocation';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 @Component({
   selector: 'app-details',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <article>
       <img [src]="housingLocation?.photo" alt="" class="listing-photo">
@@ -24,7 +25,19 @@ import { HousingLocation } from '../housinglocation';
       </section>
       <section class="listing-apply">
         <h2 class="section-heading">Apply now to live here</h2>
-        <button class="primary" type="button">Apply now</button>
+        <form [formGroup]="applyForm" (submit)="submitApplication()">
+          <label for="first-name">First name</label>
+          <input type="text" name="" id="first-name" formControlName="firstname">
+
+          <label for="last-name">Last name</label>
+          <input type="text" name="" id="last-name" formControlName="lastname">
+
+
+          <label for="email">Email</label>
+          <input type="email" name="" id="email" formControlName="email">
+
+          <button type="submit" class="primary">Apply now</button>
+        </form>
       </section>
     </article>
   `,
@@ -34,9 +47,23 @@ export class DetailsComponent {
   route: ActivatedRoute = inject(ActivatedRoute);
   housingService = inject(HousingService);
   housingLocation: HousingLocation | undefined;
+  applyForm= new FormGroup({
+    firstname: new FormControl(''),
+    lastname: new FormControl(''),
+    email: new FormControl('')
+  });
 
   constructor(){
     const housingLocationId = Number(this.route.snapshot.params['id']);
-    this.housingLocation = this.housingService.getHousingLocationById(housingLocationId);
+    this.housingService.getHousingLocationById(housingLocationId).then(housingLocation =>{
+      this.housingLocation = housingLocation;
+    })
+  }
+  submitApplication(){
+    this.housingService.submitApplication(
+      this.applyForm.value.firstname ?? '',
+      this.applyForm.value.lastname ?? '',
+      this.applyForm.value.email ?? ''
+    );
   }
 }
